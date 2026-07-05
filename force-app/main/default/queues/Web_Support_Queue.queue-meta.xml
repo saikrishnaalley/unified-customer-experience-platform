@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Queue xmlns="http://soap.sforce.com/2006/04/metadata">
+    <doesIncludeBosses>false</doesIncludeBosses>
+    <doesSendEmailToMembers>false</doesSendEmailToMembers>
+    <name>Web Support Queue</name>
+    <queueMembers>
+        <users>
+            <user>yashwanthsaikrishnaalley.19effb4a3580@agentforce.com</user>
+        </users>
+    </queueMembers>
+    <queueRoutingConfig>Standard_Case_Routing</queueRoutingConfig>
+    <queueSobject>
+        <sobjectType>Case</sobjectType>
+    </queueSobject>
+</Queue>
