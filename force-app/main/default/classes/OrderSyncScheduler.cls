@@ -13,7 +13,7 @@ public class OrderSyncScheduler implements Schedulable {
             for (Order o : ordersToSync) {
                 orderIds.add(o.Id);
             }
-            OrderSyncService.syncOrderStatuses(orderIds);
+            System.enqueueJob(new OrderSyncQueueable(orderIds));
         }
     }
 }
