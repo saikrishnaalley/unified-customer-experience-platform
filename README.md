@@ -1,21 +1,34 @@
-# Salesforce DX Project: Next Steps
+# Unified Customer Experience Platform
 
-Now that you’ve created a Salesforce DX project, what’s next? Here are some documentation resources to get you started.
+A Salesforce Sales Cloud + Service Cloud + Experience Cloud project connecting sales, support, and customer self-service into one system — with SLA automation and a live external integration.
 
-## How Do You Plan to Deploy Your Changes?
+## Problem it solves
 
-Do you want to deploy a set of changes, or create a self-contained application? Choose a [development model](https://developer.salesforce.com/tools/vscode/en/user-guide/development-models).
+Sales and Service typically run as disconnected systems: agents have no visibility into what a customer bought, SLAs go untracked, and customers have no way to self-serve. This project closes those gaps in one connected platform.
 
-## Configure Your Salesforce DX Project
+## What's built so far
 
-The `sfdx-project.json` file contains useful configuration information for your project. See [Salesforce DX Project Configuration](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_ws_config.htm) in the _Salesforce DX Developer Guide_ for details about this file.
+- **Data model:** Custom `Shipment__c` object, Order↔Opportunity and Case↔Order lookups, standard Order/Product2/Entitlement objects
+- **Security:** Permission Sets (Sales Rep, Service Agent, Portal Customer), Org-Wide Defaults, sharing rules
+- **Sales Cloud automation:** Flow auto-creates an Order when an Opportunity is marked Closed Won
+- **Service Cloud SLA:** Entitlement Process with Milestones (First Response, Resolution), auto-populated on new Cases via Flow, with a scheduled escalation Flow for breached SLAs
+- **Omni-Channel:** Service Channel, Queues, and Routing Configuration for real-time case routing. Live agent presence activation hit an environment-specific limitation in the Developer Edition trial org; the full routing configuration is in place and would activate in a standard Sales/Service Cloud license
+- **Integration:** A mock external order/shipment API (Node/Express, deployed on Render), called via a bulk-safe Apex class with 97%+ test coverage, a Platform Event for real-time updates, a Scheduled Apex job (using the Scheduler→Queueable pattern to work around Salesforce's callout-from-scheduled-Apex restriction), and a manual "Sync Now" button (Screen Flow + Quick Action)
+- **Experience Cloud:** A live customer portal (Customer Community Plus license) with authenticated login and sharing rules granting customers visibility into their own Cases and Orders
 
+## Tech stack
 
-Configured Omni-Channel routing (Service Channel, Queues, Routing Configuration, Presence Status/Configuration) for real-time case assignment. Live agent presence activation hit an environment-specific limitation in the Developer Edition trial org; the full routing configuration is in place and would activate in a standard Sales/Service Cloud license
+Apex, Lightning Flow, Lightning Web Components, Experience Cloud, Platform Events, Named Credentials, Node.js/Express, SFDX, Git/GitHub
 
-## Read All About It
+## In progress
 
-- [Salesforce Extensions Documentation](https://developer.salesforce.com/tools/vscode/)
-- [Salesforce CLI Setup Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_intro.htm)
-- [Salesforce DX Developer Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_intro.htm)
-- [Salesforce CLI Command Reference](https://developer.salesforce.com/docs/atlas.en-us.sfdx_cli_reference.meta/sfdx_cli_reference/cli_reference.htm)
+- Customer 360 LWC (agent-facing)
+- Order-tracking LWC (customer portal)
+- Reports & dashboards
+- CI/CD via GitHub Actions
+
+## Setup
+
+1. Clone this repo
+2. Authenticate to a Salesforce org: `sf org login web --alias devorg --set-default`
+3. Deploy: `sf project deploy start`
