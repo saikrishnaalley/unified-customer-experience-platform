@@ -1,0 +1,28 @@
+<template>
+    <lightning-card title="My Orders" icon-name="standard:orders">
+        <template if:true={error}>
+            <p class="slds-p-around_medium slds-text-color_error">{error}</p>
+        </template>
+
+        <template if:true={orders}>
+            <template if:false={orders.length}>
+                <p class="slds-p-around_medium">You don't have any orders yet.</p>
+            </template>
+
+            <template for:each={orders} for:item="item">
+                <div key={item.ord.Id} class="slds-p-around_medium slds-border_bottom">
+                    <p><strong>Order #{item.ord.OrderNumber}</strong> — {item.ord.Status}</p>
+                    <p>Total: ${item.ord.TotalAmount}</p>
+                    <template if:true={item.shipment}>
+                        <p>Shipment status: <strong>{item.shipment.Status__c}</strong></p>
+                        <p>Carrier: {item.shipment.Carrier__c}</p>
+                        <p>Tracking #: {item.shipment.Tracking_Number__c}</p>
+                    </template>
+                    <template if:false={item.shipment}>
+                        <p class="slds-text-color_weak">No shipment info yet.</p>
+                    </template>
+                </div>
+            </template>
+        </template>
+    </lightning-card>
+</template>

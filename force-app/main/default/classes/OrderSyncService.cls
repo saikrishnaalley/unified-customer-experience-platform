@@ -50,9 +50,45 @@ public with sharing class OrderSyncService {
 
         if (!shipmentsToUpsert.isEmpty()) {
             upsert shipmentsToUpsert;
+            shareShipmentsWithPortalCustomers(shipmentsToUpsert);
         }
         if (!eventsToPublish.isEmpty()) {
             EventBus.publish(eventsToPublish);
+        }
+    }
+
+    private static void shareShipmentsWithPortalCustomers(List<Shipment__c> shipments) {
+        List<Group> portalGroups = [
+            SELECT Id FROM Group WHERE DeveloperName = 'Portal_Customers' LIMIT 1
+        ];
+        if (portalGroups.isEmpty()) {
+            return;
+        }
+        Id portalGroupId = portalGroups[0].Id;
+
+        List<Shipment__Share> existingShares = [
+            SELECT ParentId FROM Shipment__Share
+            WHERE ParentId IN :shipments AND UserOrGroupId = :portalGroupId
+        ];
+        Set<Id> alreadySharedIds = new Set<Id>();
+        for (Shipment__Share s : existingShares) {
+            alreadySharedIds.add(s.ParentId);
+        }
+
+        List<Shipment__Share> newShares = new List<Shipment__Share>();
+        for (Shipment__c s : shipments) {
+            if (!alreadySharedIds.contains(s.Id)) {
+                Shipment__Share share = new Shipment__Share();
+                share.ParentId = s.Id;
+                share.UserOrGroupId = portalGroupId;
+                share.AccessLevel = 'Read';
+                share.RowCause = Schema.Shipment__Share.RowCause.Manual;
+                newShares.add(share);
+            }
+        }
+
+        if (!newShares.isEmpty()) {
+            insert newShares;
         }
     }
 }
