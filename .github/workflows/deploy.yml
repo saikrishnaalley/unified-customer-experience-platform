@@ -18,12 +18,9 @@ jobs:
 
       - name: Write JWT key to file
         run: |
-          printf '%s' "${{ secrets.SF_JWT_KEY }}" | sed 's/\\n/\n/g' > server.key
+          echo "${{ secrets.SF_JWT_KEY }}" | base64 --decode > server.key
           echo "--- key file line count ---"
           wc -l server.key
-          echo "--- first and last lines ---"
-          head -n 1 server.key
-          tail -n 1 server.key
 
       - name: Authenticate to Salesforce via JWT
         run: |
