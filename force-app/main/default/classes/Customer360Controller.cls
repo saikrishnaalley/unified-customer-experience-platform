@@ -5,6 +5,7 @@ public with sharing class Customer360Controller {
         @AuraEnabled public List<Opportunity> opportunities;
         @AuraEnabled public List<Order> orders;
         @AuraEnabled public List<Shipment__c> shipments;
+        @AuraEnabled public List<CaseMilestone> milestones;
     }
 
     @AuraEnabled(cacheable=true)
@@ -39,6 +40,15 @@ public with sharing class Customer360Controller {
             FROM Shipment__c
             WHERE Order__r.AccountId = :accountId
             ORDER BY Last_Synced__c DESC
+            LIMIT 10
+        ];
+
+        data.milestones = [
+            SELECT Id, CaseId, Case.CaseNumber, Case.Subject, MilestoneTypeId, MilestoneType.Name,
+                   TargetDate, IsCompleted, CompletionDate
+            FROM CaseMilestone
+            WHERE Case.AccountId = :accountId AND IsCompleted = false
+            ORDER BY TargetDate ASC
             LIMIT 10
         ];
 

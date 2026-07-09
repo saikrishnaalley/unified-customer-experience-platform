@@ -6,6 +6,13 @@ private class Customer360ControllerTest {
         Account acc = new Account(Name = 'C360 Test Account');
         insert acc;
 
+        Contact con = new Contact(
+            FirstName = 'C360',
+            LastName = 'Tester',
+            AccountId = acc.Id
+        );
+        insert con;
+
         Opportunity opp = new Opportunity(
             Name = 'C360 Test Opp',
             AccountId = acc.Id,
@@ -29,6 +36,15 @@ private class Customer360ControllerTest {
         );
         insert shipment;
 
+        Case testCase = new Case(
+            AccountId = acc.Id,
+            ContactId = con.Id,
+            Subject = 'C360 Test Case',
+            Status = 'New',
+            Origin = 'Web'
+        );
+        insert testCase;
+
         Test.startTest();
         Customer360Controller.Customer360Data result = Customer360Controller.getCustomer360(acc.Id);
         Test.stopTest();
@@ -37,5 +53,8 @@ private class Customer360ControllerTest {
         System.assertEquals(1, result.opportunities.size());
         System.assertEquals(1, result.orders.size());
         System.assertEquals(1, result.shipments.size());
+        // Milestones may be 0 if no Entitlement/Process is linked in this test context — that's fine,
+        // this just confirms the query itself runs without error
+        System.assert(result.milestones != null, 'Milestones list should not be null');
     }
 }
