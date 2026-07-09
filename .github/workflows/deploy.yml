@@ -17,7 +17,13 @@ jobs:
         run: npm install --global @salesforce/cli
 
       - name: Write JWT key to file
-        run: echo "${{ secrets.SF_JWT_KEY }}" > server.key
+        run: |
+          printf '%s' "${{ secrets.SF_JWT_KEY }}" | sed 's/\\n/\n/g' > server.key
+          echo "--- key file line count ---"
+          wc -l server.key
+          echo "--- first and last lines ---"
+          head -n 1 server.key
+          tail -n 1 server.key
 
       - name: Authenticate to Salesforce via JWT
         run: |
