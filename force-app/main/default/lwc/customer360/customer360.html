@@ -4,6 +4,12 @@
             <p class="slds-p-around_medium slds-text-color_error">{error}</p>
         </template>
 
+        <template if:true={liveUpdateBanner}>
+            <div class="slds-p-around_small slds-theme_info">
+                {liveUpdateBanner}
+            </div>
+        </template>
+
         <template if:true={account}>
             <div class="slds-p-around_medium">
                 <p><strong>Account:</strong> {account.Name}</p>
