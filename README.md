@@ -1,78 +1,140 @@
-# Unified Customer Experience Platform
+# 🔗 Unified Customer Experience Platform
 
-A Salesforce Sales Cloud + Service Cloud + Experience Cloud project connecting sales, support, and customer self-service into one system — with SLA automation, a live external integration, and a fully automated CI/CD pipeline.
+![Salesforce](https://img.shields.io/badge/Salesforce-00A1E0?style=for-the-badge&logo=salesforce&logoColor=white)
+![Apex](https://img.shields.io/badge/Apex-00A1E0?style=for-the-badge&logo=salesforce&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
 
-## Problem it solves
+![Tests](https://img.shields.io/badge/Tests-41%2F41%20Passing-brightgreen?style=flat-square)
+![Coverage](https://img.shields.io/badge/Custom%20Apex%20Coverage-95--97%25-brightgreen?style=flat-square)
+![Status](https://img.shields.io/badge/Status-Active%20Development-blue?style=flat-square)
+
+A Salesforce **Sales Cloud + Service Cloud + Experience Cloud** project connecting sales, support, and customer self-service into one system — with SLA automation, a live external integration, and a fully automated CI/CD pipeline.
+
+---
+
+## 🎯 The Problem
 
 Sales and Service typically run as disconnected systems: agents have no visibility into what a customer bought, SLAs go untracked, and customers have no way to self-serve. This project closes those gaps in one connected platform.
 
-## What's built
+---
 
-**Data model:** Custom `Shipment__c` object, Order↔Opportunity and Case↔Order lookups, standard Order/Product2/Entitlement objects.
+## ✨ What's Built
 
-**Security:** Permission Sets (Sales Rep, Service Agent, Portal Customer), Org-Wide Defaults, sharing rules, and Apex-managed sharing (`Shipment__Share`) for cases where declarative role-based sharing didn't propagate reliably.
+### 🗂️ Data Model
+Custom `Shipment__c` object, `Order`↔`Opportunity` and `Case`↔`Order` lookups, standard Order/Product2/Entitlement objects.
 
-**Sales Cloud automation:** Flow auto-creates an Order (with real Order Products/line items) when an Opportunity is marked Closed Won.
+### 🔐 Security
+Permission Sets (Sales Rep, Service Agent, Portal Customer), Org-Wide Defaults, sharing rules, and **Apex-managed sharing** (`Shipment__Share`) for cases where declarative role-based sharing didn't propagate reliably.
 
-**Service Cloud SLA:** Entitlement Process with Milestones (First Response — 240 min, Resolution — 960 min), auto-populated on new Cases via Flow, with a scheduled escalation Flow for breached SLAs.
+### 💼 Sales Cloud Automation
+Flow auto-creates an Order — with real Order Products/line items — the moment an Opportunity is marked **Closed Won**.
 
-**Omni-Channel:** Service Channel, Queues, and Routing Configuration for real-time case routing. Live agent presence activation hit an environment-specific limitation in the Developer Edition trial org; the full routing configuration is in place and would activate in a standard Sales/Service Cloud license.
+### ⏱️ Service Cloud SLA
+Entitlement Process with Milestones:
 
-**Integration:** A mock external order/shipment API (Node/Express, deployed on Render), called via a bulk-safe Apex service (`OrderSyncService`) with 95%+ test coverage, chunked to respect Salesforce's 100-callout-per-transaction governor limit via queueable chaining, a Platform Event for real-time updates, a Scheduled Apex job (using the Scheduler→Queueable pattern to work around Salesforce's callout-from-scheduled-Apex restriction), and a manual "Sync Now" button (Screen Flow + Quick Action).
+| Milestone | Target |
+|---|---|
+| First Response | 240 min |
+| Resolution | 960 min |
 
-**Experience Cloud:** A live customer portal (Customer Community Plus license) with authenticated login and sharing rules granting customers visibility into their own Cases, Orders, and Shipments.
+Auto-populated on new Cases via Flow, with a scheduled escalation Flow for breached SLAs.
 
-**Agent-facing LWC:** `Customer360Controller` + `customer360` component on the Account page — shows Account, Opportunities, Orders, and Shipments, plus color-coded SLA Milestone countdowns and a **live Platform Event subscription** (via `lightning/empApi`) that auto-refreshes the view when an order status changes elsewhere in the system.
+### 📞 Omni-Channel
+Service Channel, Queues, and Routing Configuration for real-time case routing. ⚠️ *Live agent presence activation hits a Developer Edition trial org limitation — full routing configuration is in place and would activate on a standard Sales/Service Cloud license.*
 
-**Customer-facing LWC:** `PortalOrderController` + `myOrders` component on the portal Home page — shows each customer's Orders and Shipment tracking status, respecting all sharing rules.
+### 🔄 Integration
+A mock external order/shipment API (Node/Express, deployed on Render), called via a bulk-safe Apex service (`OrderSyncService`) with **95%+ test coverage**, chunked to respect Salesforce's 100-callout-per-transaction governor limit via queueable chaining, a Platform Event for real-time updates, a Scheduled Apex job (Scheduler→Queueable pattern, working around Salesforce's callout-from-scheduled-Apex restriction), and a manual "Sync Now" button (Screen Flow + Quick Action).
 
-**Reports & dashboards:** Pipeline by Stage, Case Resolution Time, SLA Compliance Rate, Cases by Origin, and a `UCE Platform Overview` dashboard — version-controlled in this repo, not just live in the org.
+### 🌐 Experience Cloud
+A live customer portal (Customer Community Plus license) with authenticated login and sharing rules granting customers visibility into their own Cases, Orders, and Shipments.
 
-**CI/CD:** Fully automated via GitHub Actions. Every push to `main` authenticates to the org via JWT bearer flow (certificate-based, no interactive login), deploys the entire `force-app` source tree, and runs the full local Apex test suite — with results visible in the Actions tab. See [CI/CD Pipeline](#cicd-pipeline) below.
+### 🖥️ Agent-Facing LWC — `customer360`
+On the Account page — shows Account, Opportunities, Orders, and Shipments, plus color-coded SLA Milestone countdowns and a **live Platform Event subscription** (via `lightning/empApi`) that auto-refreshes the view the instant an order status changes elsewhere in the system.
 
-## CI/CD Pipeline
+### 📱 Customer-Facing LWC — `myOrders`
+On the portal Home page — shows each customer's Orders and Shipment tracking status, fully respecting sharing rules.
 
-This project deploys and tests itself automatically. On every push to `main`:
+### 📊 Reports & Dashboards
+Pipeline by Stage · Case Resolution Time · SLA Compliance Rate · Cases by Origin · `UCE Platform Overview` dashboard — version-controlled in this repo, not just live in the org.
 
-1. GitHub Actions spins up a fresh runner and installs the Salesforce CLI
-2. Authenticates to the org via **JWT bearer flow** — a self-signed certificate registered on a Salesforce External Client App, with the private key stored as a GitHub secret. No password is ever entered.
-3. Deploys the full source tree (`sf project deploy start`)
-4. Runs all local Apex tests (`sf apex run test --test-level RunLocalTests`)
-5. Reports pass/fail results directly in the Actions tab
+---
 
-Workflow file: [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)
+## 🚀 CI/CD Pipeline
 
-This setup caught two real bugs before they could reach a "working" org silently:
-- A scheduled-job naming collision in a test that only surfaced when running against an org with a live scheduled job already present
-- A missing object/field permission (and a stale "In Development" deployment status) that silently blocked portal users from seeing their own Shipment records — invisible to admin testing, but caught immediately by a test that ran as the actual portal user
+This project deploys and tests **itself**, automatically, on every push to `main`:
 
-## Testing strategy
+```
+git push  →  🤖 GitHub Actions wakes up
+          →  🔑 Authenticates via JWT (certificate-based, zero passwords)
+          →  📦 Deploys entire force-app source tree
+          →  ✅ Runs full Apex test suite
+          →  📋 Results posted to the Actions tab
+```
 
-- Custom Apex classes average **95–97% coverage** (org-wide figure includes bundled Salesforce Experience Cloud controllers that aren't part of this project's code, which pulls the blended number down to ~80%)
-- `HttpCalloutMock` used throughout — no test ever makes a real callout
-- Bulk tests exercise governor-limit boundaries (100-record callout ceiling per transaction), not arbitrary small numbers
-- Negative/edge cases covered: failed callouts, non-existent record Ids, empty input lists
-- `OrderSyncQueueable` chunks any batch over 100 orders and chains itself via `System.enqueueJob` to stay within Salesforce's per-transaction callout limit — a bug the bulk tests surfaced directly, fixed as a result
+**Auth method:** JWT bearer flow — a self-signed certificate registered on a Salesforce External Client App, private key stored as a GitHub secret. No password ever entered, no human in the loop.
 
-## Known limitations
+📄 Workflow file: [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)
 
-- **Omni-Channel live presence:** routing configuration is complete, but live agent presence activation is blocked by a Developer Edition trial org limitation — would work as-is on a standard license.
-- **CI/CD deploys to a persistent dev org**, not a disposable scratch org per run, since this is a solo project without a team review/branch workflow. A team setting would typically add feature branches, pull request review, and per-PR scratch org validation before merging to `main`.
+> 🐛 **Real bugs this pipeline caught before they shipped:**
+> - A scheduled-job naming collision that only surfaced against an org with a live scheduled job already running
+> - A missing object/field permission (+ a stale "In Development" status) silently blocking portal users from seeing their own Shipments — invisible to admin testing, caught immediately by a test running as the actual portal user
 
-## Tech stack
+---
 
-Apex, Lightning Flow, Lightning Web Components, Experience Cloud, Platform Events, Named Credentials, Node.js/Express, GitHub Actions, JWT-based CI/CD authentication, SFDX, Git/GitHub
+## 🧪 Testing Strategy
 
-## Demo
+| Metric | Result |
+|---|---|
+| Custom Apex coverage | **95–97%** |
+| Org-wide coverage | 81% *(pulled down by bundled Salesforce Experience Cloud controllers — not this project's code)* |
+| Tests passing | **41 / 41** ✅ |
+| Real callouts in tests | **Zero** — `HttpCalloutMock` used throughout |
 
-- **Customer Portal:** `https://orgfarm-a1be47f661-dev-ed.develop.my.site.com/s/`
-- Demo login username: `acme.contact@uceplatform.dev` (password available on request)
+- ✅ Bulk tests exercise real governor-limit boundaries (100-record callout ceiling), not arbitrary small numbers
+- ✅ Negative/edge cases covered: failed callouts, non-existent record Ids, empty input lists
+- ✅ `OrderSyncQueueable` chunks any batch over 100 orders and chains itself via `System.enqueueJob` — a bug the bulk tests found directly, fixed as a result
 
-## Setup
+---
 
-1. Clone this repo
-2. Authenticate to a Salesforce org: `sf org login web --alias devorg --set-default`
-3. Deploy: `sf project deploy start`
-4. Run tests: `sf apex run test --test-level RunLocalTests --code-coverage --result-format human`
+## ⚠️ Known Limitations
 
-To set up your own CI/CD pipeline against a different org, see the JWT auth setup steps in `.github/workflows/deploy.yml` and configure the four required repo secrets (`SF_CONSUMER_KEY`, `SF_USERNAME`, `SF_INSTANCE_URL`, `SF_JWT_KEY`).
+- **Omni-Channel live presence** — routing config complete, but live agent presence activation is blocked by a Developer Edition trial limitation
+- **CI/CD deploys to a persistent dev org**, not a disposable scratch org per run — a deliberate simplification for a solo project. A team setting would add feature branches, PR review, and per-PR scratch org validation before merging to `main`
+
+---
+
+## 🛠️ Tech Stack
+
+`Apex` · `Lightning Flow` · `Lightning Web Components` · `Experience Cloud` · `Platform Events` · `Named Credentials` · `Node.js/Express` · `GitHub Actions` · `JWT Auth` · `SFDX` · `Git`
+
+---
+
+## 🎬 Demo
+
+- **Customer Portal:** [orgfarm-a1be47f661-dev-ed.develop.my.site.com](https://orgfarm-a1be47f661-dev-ed.develop.my.site.com/s/)
+- Demo login: `acme.contact@uceplatform.dev` *(password available on request)*
+
+---
+
+## ⚡ Setup
+
+```bash
+# 1. Clone this repo
+git clone https://github.com/saikrishnaalley/unified-customer-experience-platform.git
+
+# 2. Authenticate to a Salesforce org
+sf org login web --alias devorg --set-default
+
+# 3. Deploy
+sf project deploy start
+
+# 4. Run tests
+sf apex run test --test-level RunLocalTests --code-coverage --result-format human
+```
+
+Want your own CI/CD pipeline running against a different org? See the JWT auth setup in [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) and configure four repo secrets: `SF_CONSUMER_KEY`, `SF_USERNAME`, `SF_INSTANCE_URL`, `SF_JWT_KEY`.
+
+---
+
+⭐ *If you found this project interesting, a star is always appreciated!*
