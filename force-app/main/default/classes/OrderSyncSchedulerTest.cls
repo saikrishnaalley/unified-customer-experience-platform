@@ -40,10 +40,11 @@ private class OrderSyncSchedulerTest {
     static void testJobCanBeScheduled() {
         Test.startTest();
         String cronExp = '0 0 * * * ?';
-        String jobId = System.schedule('Order Sync Job', cronExp, new OrderSyncScheduler());
+        String uniqueJobName = 'Order Sync Job Test ' + String.valueOf(Datetime.now().getTime());
+        String jobId = System.schedule(uniqueJobName, cronExp, new OrderSyncScheduler());
         Test.stopTest();
 
         CronTrigger ct = [SELECT Id, CronExpression, TimesTriggered FROM CronTrigger WHERE Id = :jobId];
         System.assertEquals(cronExp, ct.CronExpression, 'Expected the job to be scheduled with the correct cron expression');
-    }
+    }      
 }
