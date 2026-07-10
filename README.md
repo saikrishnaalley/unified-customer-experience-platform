@@ -1,4 +1,8 @@
+<div align="center">
+
 # 🔗 Unified Customer Experience Platform
+
+### Sales Cloud + Service Cloud + Experience Cloud, connected — with SLA automation, a live integration, and a self-deploying CI/CD pipeline
 
 ![Salesforce](https://img.shields.io/badge/Salesforce-00A1E0?style=for-the-badge&logo=salesforce&logoColor=white)
 ![Apex](https://img.shields.io/badge/Apex-00A1E0?style=for-the-badge&logo=salesforce&logoColor=white)
@@ -8,8 +12,23 @@
 ![Tests](https://img.shields.io/badge/Tests-41%2F41%20Passing-brightgreen?style=flat-square)
 ![Coverage](https://img.shields.io/badge/Custom%20Apex%20Coverage-95--97%25-brightgreen?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-Active%20Development-blue?style=flat-square)
+![License](https://img.shields.io/badge/Deploy%20Auth-JWT%20%2F%20Zero%20Passwords-purple?style=flat-square)
 
-A Salesforce **Sales Cloud + Service Cloud + Experience Cloud** project connecting sales, support, and customer self-service into one system — with SLA automation, a live external integration, and a fully automated CI/CD pipeline.
+</div>
+
+---
+
+## 📑 Table of Contents
+
+- [🎯 The Problem](#-the-problem)
+- [🗺️ Architecture](#️-architecture-at-a-glance)
+- [✨ What's Built](#-whats-built)
+- [🚀 CI/CD Pipeline](#-cicd-pipeline)
+- [🧪 Testing Strategy](#-testing-strategy)
+- [⚠️ Known Limitations](#️-known-limitations)
+- [🛠️ Tech Stack](#️-tech-stack)
+- [🎬 Demo](#-demo)
+- [⚡ Setup](#-setup)
 
 ---
 
@@ -19,18 +38,75 @@ Sales and Service typically run as disconnected systems: agents have no visibili
 
 ---
 
+## 🗺️ Architecture at a Glance
+
+```mermaid
+flowchart TB
+    subgraph Sales["💼 Sales Cloud"]
+        A[Opportunity: Closed Won] -->|Flow| B[Order Created]
+    end
+
+    subgraph Service["⏱️ Service Cloud"]
+        C[Case Created] -->|Flow| D[Entitlement + Milestones]
+        D --> E[SLA Escalation Flow]
+    end
+
+    subgraph Integration["🔄 Integration Layer"]
+        B --> F[OrderSyncService]
+        F -->|HTTP callout, chunked ≤100| G[Mock Order API<br/>Node/Express on Render]
+        G --> F
+        F --> H[Shipment__c record]
+        F --> I[Platform Event]
+    end
+
+    subgraph Experience["🌐 Experience Cloud"]
+        H --> J[customer360 LWC<br/>Agent view]
+        H --> K[myOrders LWC<br/>Portal customer view]
+        I -.->|live push via empApi| J
+    end
+
+    subgraph CICD["🚀 CI/CD"]
+        L[git push] --> M[GitHub Actions]
+        M -->|JWT auth| N[Deploy + Run Tests]
+        N --> O[Salesforce Org]
+    end
+
+    style Sales fill:#00A1E0,color:#fff
+    style Service fill:#FF6B35,color:#fff
+    style Integration fill:#6B4EFF,color:#fff
+    style Experience fill:#00B894,color:#fff
+    style CICD fill:#2088FF,color:#fff
+```
+
+---
+
 ## ✨ What's Built
 
-### 🗂️ Data Model
+<details open>
+<summary><b>🗂️ Data Model</b></summary>
+<br>
+
 Custom `Shipment__c` object, `Order`↔`Opportunity` and `Case`↔`Order` lookups, standard Order/Product2/Entitlement objects.
+</details>
 
-### 🔐 Security
+<details open>
+<summary><b>🔐 Security</b></summary>
+<br>
+
 Permission Sets (Sales Rep, Service Agent, Portal Customer), Org-Wide Defaults, sharing rules, and **Apex-managed sharing** (`Shipment__Share`) for cases where declarative role-based sharing didn't propagate reliably.
+</details>
 
-### 💼 Sales Cloud Automation
+<details open>
+<summary><b>💼 Sales Cloud Automation</b></summary>
+<br>
+
 Flow auto-creates an Order — with real Order Products/line items — the moment an Opportunity is marked **Closed Won**.
+</details>
 
-### ⏱️ Service Cloud SLA
+<details open>
+<summary><b>⏱️ Service Cloud SLA</b></summary>
+<br>
+
 Entitlement Process with Milestones:
 
 | Milestone | Target |
@@ -39,24 +115,51 @@ Entitlement Process with Milestones:
 | Resolution | 960 min |
 
 Auto-populated on new Cases via Flow, with a scheduled escalation Flow for breached SLAs.
+</details>
 
-### 📞 Omni-Channel
-Service Channel, Queues, and Routing Configuration for real-time case routing. ⚠️ *Live agent presence activation hits a Developer Edition trial org limitation — full routing configuration is in place and would activate on a standard Sales/Service Cloud license.*
+<details>
+<summary><b>📞 Omni-Channel</b></summary>
+<br>
 
-### 🔄 Integration
+Service Channel, Queues, and Routing Configuration for real-time case routing.
+
+⚠️ *Live agent presence activation hits a Developer Edition trial org limitation — full routing configuration is in place and would activate on a standard Sales/Service Cloud license.*
+</details>
+
+<details open>
+<summary><b>🔄 Integration</b></summary>
+<br>
+
 A mock external order/shipment API (Node/Express, deployed on Render), called via a bulk-safe Apex service (`OrderSyncService`) with **95%+ test coverage**, chunked to respect Salesforce's 100-callout-per-transaction governor limit via queueable chaining, a Platform Event for real-time updates, a Scheduled Apex job (Scheduler→Queueable pattern, working around Salesforce's callout-from-scheduled-Apex restriction), and a manual "Sync Now" button (Screen Flow + Quick Action).
+</details>
 
-### 🌐 Experience Cloud
+<details open>
+<summary><b>🌐 Experience Cloud</b></summary>
+<br>
+
 A live customer portal (Customer Community Plus license) with authenticated login and sharing rules granting customers visibility into their own Cases, Orders, and Shipments.
+</details>
 
-### 🖥️ Agent-Facing LWC — `customer360`
+<details open>
+<summary><b>🖥️ Agent-Facing LWC — <code>customer360</code></b></summary>
+<br>
+
 On the Account page — shows Account, Opportunities, Orders, and Shipments, plus color-coded SLA Milestone countdowns and a **live Platform Event subscription** (via `lightning/empApi`) that auto-refreshes the view the instant an order status changes elsewhere in the system.
+</details>
 
-### 📱 Customer-Facing LWC — `myOrders`
+<details open>
+<summary><b>📱 Customer-Facing LWC — <code>myOrders</code></b></summary>
+<br>
+
 On the portal Home page — shows each customer's Orders and Shipment tracking status, fully respecting sharing rules.
+</details>
 
-### 📊 Reports & Dashboards
+<details open>
+<summary><b>📊 Reports & Dashboards</b></summary>
+<br>
+
 Pipeline by Stage · Case Resolution Time · SLA Compliance Rate · Cases by Origin · `UCE Platform Overview` dashboard — version-controlled in this repo, not just live in the org.
+</details>
 
 ---
 
@@ -64,12 +167,23 @@ Pipeline by Stage · Case Resolution Time · SLA Compliance Rate · Cases by Ori
 
 This project deploys and tests **itself**, automatically, on every push to `main`:
 
-```
-git push  →  🤖 GitHub Actions wakes up
-          →  🔑 Authenticates via JWT (certificate-based, zero passwords)
-          →  📦 Deploys entire force-app source tree
-          →  ✅ Runs full Apex test suite
-          →  📋 Results posted to the Actions tab
+```mermaid
+sequenceDiagram
+    participant Dev as 👤 Developer
+    participant GH as 🐙 GitHub
+    participant Actions as 🤖 GitHub Actions
+    participant SF as ☁️ Salesforce Org
+
+    Dev->>GH: git push
+    GH->>Actions: trigger workflow
+    Actions->>Actions: install Salesforce CLI
+    Actions->>SF: 🔑 authenticate via JWT (cert-based)
+    SF-->>Actions: ✅ authenticated
+    Actions->>SF: 📦 deploy force-app source
+    SF-->>Actions: deploy result
+    Actions->>SF: run Apex tests
+    SF-->>Actions: 41/41 passing
+    Actions-->>GH: ✅ post results to Actions tab
 ```
 
 **Auth method:** JWT bearer flow — a self-signed certificate registered on a Salesforce External Client App, private key stored as a GitHub secret. No password ever entered, no human in the loop.
@@ -84,13 +198,20 @@ git push  →  🤖 GitHub Actions wakes up
 
 ## 🧪 Testing Strategy
 
-| Metric | Result |
-|---|---|
-| Custom Apex coverage | **95–97%** |
-| Org-wide coverage | 81% *(pulled down by bundled Salesforce Experience Cloud controllers — not this project's code)* |
-| Tests passing | **41 / 41** ✅ |
-| Real callouts in tests | **Zero** — `HttpCalloutMock` used throughout |
+<div align="center">
 
+| Metric | Result |
+|:---:|:---:|
+| Custom Apex coverage | **95–97%** ✅ |
+| Org-wide coverage | 81% ℹ️ |
+| Tests passing | **41 / 41** ✅ |
+| Real callouts in tests | **Zero** 🚫 |
+
+</div>
+
+*Org-wide figure is pulled down by bundled Salesforce Experience Cloud controllers that aren't part of this project's code.*
+
+- ✅ `HttpCalloutMock` used throughout — no test ever makes a real callout
 - ✅ Bulk tests exercise real governor-limit boundaries (100-record callout ceiling), not arbitrary small numbers
 - ✅ Negative/edge cases covered: failed callouts, non-existent record Ids, empty input lists
 - ✅ `OrderSyncQueueable` chunks any batch over 100 orders and chains itself via `System.enqueueJob` — a bug the bulk tests found directly, fixed as a result
@@ -106,7 +227,11 @@ git push  →  🤖 GitHub Actions wakes up
 
 ## 🛠️ Tech Stack
 
+<div align="center">
+
 `Apex` · `Lightning Flow` · `Lightning Web Components` · `Experience Cloud` · `Platform Events` · `Named Credentials` · `Node.js/Express` · `GitHub Actions` · `JWT Auth` · `SFDX` · `Git`
+
+</div>
 
 ---
 
@@ -137,4 +262,8 @@ Want your own CI/CD pipeline running against a different org? See the JWT auth s
 
 ---
 
+<div align="center">
+
 ⭐ *If you found this project interesting, a star is always appreciated!*
+
+</div>
