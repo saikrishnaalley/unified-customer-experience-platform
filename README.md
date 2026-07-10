@@ -71,11 +71,13 @@ flowchart TB
         N --> O[Salesforce Org]
     end
 
-    style Sales fill:#00A1E0,color:#fff
-    style Service fill:#FF6B35,color:#fff
-    style Integration fill:#6B4EFF,color:#fff
-    style Experience fill:#00B894,color:#fff
-    style CICD fill:#2088FF,color:#fff
+    Experience -.->|keeps org current| CICD
+
+    style Sales fill:#0176D3,color:#fff,stroke:#014486,stroke-width:2px
+    style Service fill:#04844B,color:#fff,stroke:#032D22,stroke-width:2px
+    style Integration fill:#5B3CC4,color:#fff,stroke:#32195E,stroke-width:2px
+    style Experience fill:#EA5F3A,color:#fff,stroke:#8F2E17,stroke-width:2px
+    style CICD fill:#16325C,color:#fff,stroke:#08162B,stroke-width:2px
 ```
 
 ---
